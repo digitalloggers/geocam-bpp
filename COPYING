@@ -1,0 +1,9 @@
+Kernel patches in the camera-bpp subdirectory (except for
+0001-f44b969aa3cddabe86e9aff411889643298e8d59.patch files which are
+copies of the Linux kernel commit with said hash and Copyright their
+authors) are Copyright (c) 2019 Digital Loggers, Inc. and provided,
+likewise to the Linux kernel, under:
+
+SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note
+
+See LICENSES/preferred/GPL-2.0, LICENSES/exceptions/Linux-syscall-note for details.
