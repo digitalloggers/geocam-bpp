@@ -32,7 +32,7 @@
 +			info = v4l2_format_info(format->fcc);
 +			if (info) {
 +				div = info->hdiv * info->vdiv;
-+				n = info->bpp[i] * div;
++				n = info->bpp[0] * div;
 +				for (i = 1; i < info->comp_planes; i++)
 +					n += info->bpp[i];
 +				format->bpp = DIV_ROUND_UP(8 * n, div);
