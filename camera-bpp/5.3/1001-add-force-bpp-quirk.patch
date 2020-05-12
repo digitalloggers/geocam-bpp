@@ -1,0 +1,55 @@
+--- a/drivers/media/usb/uvc/uvcvideo.h
++++ b/drivers/media/usb/uvc/uvcvideo.h
+@@ -198,6 +198,7 @@
+ #define UVC_QUIRK_RESTRICT_FRAME_RATE	0x00000200
+ #define UVC_QUIRK_RESTORE_CTRLS_ON_INIT	0x00000400
+ #define UVC_QUIRK_FORCE_Y8		0x00000800
++#define UVC_QUIRK_FORCE_BPP		0x00001000
+ 
+ /* Format flags */
+ #define UVC_FMT_FLAG_COMPRESSED		0x00000001
+--- a/drivers/media/usb/uvc/uvc_driver.c
++++ b/drivers/media/usb/uvc/uvc_driver.c
+@@ -446,10 +446,12 @@ static int uvc_parse_format(struct uvc_device *dev,
+ 	struct usb_host_interface *alts = intf->cur_altsetting;
+ 	struct uvc_format_desc *fmtdesc;
+ 	struct uvc_frame *frame;
++	const struct v4l2_format_info * info;
+ 	const unsigned char *start = buffer;
+ 	unsigned int width_multiplier = 1;
+ 	unsigned int interval;
+ 	unsigned int i, n;
++	unsigned int div;
+ 	u8 ftype;
+ 
+ 	format->type = buffer[2];
+@@ -497,6 +499,18 @@ static int uvc_parse_format(struct uvc_device *dev,
+ 			}
+ 		}
+ 
++		/* Some devices report bpp that doesn't match the format. */
++		if (dev->quirks & UVC_QUIRK_FORCE_BPP) {
++			info = v4l2_format_info(format->fcc);
++			if (info) {
++				div = info->hdiv * info->vdiv;
++				n = info->bpp[0] * div;
++				for (i = 1; i < info->comp_planes; i++)
++					n += info->bpp[i];
++				format->bpp = DIV_ROUND_UP(8 * n, div);
++			}
++		}
++
+ 		if (buffer[2] == UVC_VS_FORMAT_UNCOMPRESSED) {
+ 			ftype = UVC_VS_FRAME_UNCOMPRESSED;
+ 		} else {
+@@ -2384,6 +2398,10 @@ static const struct uvc_device_info uvc_quirk_force_y8 = {
+ 	.quirks = UVC_QUIRK_FORCE_Y8,
+ };
+ 
++static const struct uvc_device_info uvc_quirk_force_bpp = {
++	.quirks = UVC_QUIRK_FORCE_BPP,
++};
++
+ #define UVC_INFO_QUIRK(q) (kernel_ulong_t)&(struct uvc_device_info){.quirks = q}
+ #define UVC_INFO_META(m) (kernel_ulong_t)&(struct uvc_device_info) \
+ 	{.meta_format = m}
